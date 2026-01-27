@@ -175,37 +175,40 @@ Simulate the AWS environment on your laptop.
 3.  **Run**: Execute `docker compose up -d` on the server.
 4.  **Secure Access**: Set up Tailscale or an SSH tunnel so only your team can access the Web UI.
 
-### 10. Cost & Usage Optimization Strategy
-**Requirement**: "Reduced the amount of taken usage... Disable some 'skill', use a cheaper model?"
+### 10. Model Selection & Cost/Risk Analysis
+**Requirement**: "Using 'gpt-4o-mini' is wise? We want reasoning power... lending needs to be very precise."
 
-This is a critical concern. AI API costs are based on "tokens" (text sent/received).
+You are correct that lending operations (Rate Locking, Pricing) require high precision. Relying solely on the cheapest model ("mini") introduces risk of hallucinations or logic errors. However, using the most expensive model for *everything* (e.g., navigating menus) is wasteful.
 
-#### Strategy A: Reduce Context (Input Tokens)
-Every time you send a message, the AI reads its "instructions" (System Prompt).
-*   **Action**: **Disable unused skills.**
-    *   If you enable "Spotify", "Weather", "GitHub", etc., the AI reads instructions for all of them on *every* request.
-    *   **Fix**: Explicitly disable everything except `browser` and `emma` in `clawdbot.json`.
-    *   **Impact**: drastically reduces input token cost per message.
+#### Model Comparison: Precision vs. Cost
+Based on current data (and preview/leak specs for upcoming models):
 
-#### Strategy B: Use Cheaper Models
-For routine tasks (looking up a loan status), you don't need the "smartest" (and most expensive) model.
-*   **Recommended Model**: **GPT-4o-mini** or **Claude 3 Haiku**.
-*   **Cost Difference**:
-    *   Claude 3.5 Opus: ~$15.00 / 1M input tokens.
-    *   **GPT-4o-mini**: ~$0.15 / 1M input tokens. (**100x cheaper**)
-*   **Configuration**:
-    Set the default model in `clawdbot.json`:
-    ```json
-    {
-      "agent": {
-        "model": "openai/gpt-4o-mini"
-      }
-    }
-    ```
+| Model | Reasoning / Instruction Following | Speed | Est. Price (Input/Output per 1M) | Best Use Case |
+| :--- | :--- | :--- | :--- | :--- |
+| **GPT-4o** (Standard) | **High (5/5)** | Fast | ~$2.50 / $10.00 | Complex decisions, Final verification. |
+| **GPT-4o-mini** | Medium (3/5) | **Very Fast** | ~$0.15 / $0.60 | Routine tasks, Data extraction, UI navigation. |
+| **GPT-5 mini** (Preview) | **High-Medium (3.5/5)** | **Lightning** | ~$0.25 / $2.00 | A balance of speed and better reasoning than 4o-mini. |
+| **Gemini 2.0 Flash** | Medium-High (4/5) | **Extreme** | ~$0.10 / $0.40 | Large context analysis (documents), fast actions. |
+| **Gemini 3 Flash** (Preview) | **High (Target)** | **Extreme** | (Unknown, likely ~$0.15) | Next-gen efficiency with improved reasoning. |
 
-#### Strategy C: Limit "Thinking"
-*   **Action**: Ensure "Thinking" (Chain of Thought) is disabled or set to "low" for simple tasks. High thinking burns output tokens rapidly.
+#### Recommended Strategy: The "Hybrid" Approach
+Do not rely on a single model. Use the right tool for the job to balance cost and safety.
 
-## Conclusion
+1.  **Tier 1: The "Doer" (Low Cost / High Speed)**
+    *   **Model**: **GPT-5 mini** (if avail) or **Gemini 2.0 Flash**.
+    *   **Role**: Navigating the EMMA UI, clicking buttons, filling simple forms, searching for loans.
+    *   **Why**: These tasks are "mechanical" and don't require deep reasoning. Spending $10/million tokens on this is a waste.
 
-By running a **customized Docker container** on a **$20/mo AWS Lightsail instance**, using **GPT-4o-mini**, and **disabling unused skills**, you can build a secure, cost-effective, and highly capable Lending Assistant that integrates with EMMA via browser automation—all without modifying the core software platform.
+2.  **Tier 2: The "Thinker" (High Precision / Safety)**
+    *   **Model**: **GPT-4o** or **o1** (Reasoning models).
+    *   **Role**:
+        *   **Validating Data**: "Check this loan application against the uploaded PDF. Are the incomes identical?"
+        *   **Critical Actions**: "Verify the rate lock terms (6.5%, 30yr) match the user's request exactly before clicking Confirm."
+    *   **Why**: The cost of a mistake in lending (locking the wrong rate) is huge. The extra few cents for a "Reasoning" model here is insurance.
+
+3.  **Human-in-the-Loop (Ultimate Safety)**
+    *   Even with the best model, for irreversible actions (Delete, Lock Rate), the system should **pause and ask the human**:
+    *   *Agent*: "I am about to LOCK the rate at 6.5%. Please confirm."
+    *   *Human*: "Approve."
+
+**Conclusion**: Start with **GPT-5 mini** or **Gemini 2.0 Flash** for general responsiveness. If you find it makes logic errors, switch *specific complex prompts* to use a larger model, or enforce human confirmation for all sensitive steps.
