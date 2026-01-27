@@ -58,7 +58,19 @@ The system loads "skills" (capabilities) from directories. You can restrict the 
   - **Visuals**: It can take screenshots of the portal to confirm actions or show the status to the loan officer.
 - **Implementation**: You would define these interactions as a "Skill" (e.g., `skills/emma/SKILL.md`) telling the agent: "To lock a rate, go to url X, click button Y...".
 
-### 4. Mortgage Capabilities (API & Tools)
+### 4. Web-Based Deployment (No Local Install)
+**Requirement**: "Is it possible to have a web based assistant... [without installation for the user]?"
+
+**Solution**:
+**Yes, this project is fully deployable as a centralized web service.**
+- **Server Deployment**: The project includes a `Dockerfile` and `docker-compose.yml`, making it ready for deployment on any cloud provider (AWS, GCP, Azure) or internal server.
+- **Access**:
+  - Users (Loan Officers) access the assistant purely via their web browser.
+  - No installation is required on their local machines.
+  - Remote access is supported securely via **Tailscale** (VPN) or by exposing the Web UI via a secure reverse proxy. The system supports authentication (`gateway.auth.mode`) to ensure only authorized loan officers can access it.
+- **Headless Automation**: The Playwright browser automation runs entirely on the server ("headless" mode) inside the Docker container. The user interacts with the Chat UI, and the server performs the clicks/navigation on the EMMA portal in the background.
+
+### 5. Mortgage Capabilities (API & Tools)
 **Requirement**: "Generate loans, rate lock loans, price etc, consult loans, upload documents."
 
 **Solution**:
@@ -81,7 +93,7 @@ You can add new capabilities by creating **Skills**. A Skill is simply a directo
     `curl -X POST "https://api.springeq.com/loans/{id}/lock" -d '{"rate": {rate}}'`
     ```
 
-### 5. Safety & Human-in-the-Loop
+### 6. Safety & Human-in-the-Loop
 **Requirement**: "Limiting its capacity like requiring human in the loop for contacting other people or deleting files."
 
 **Solution**:
@@ -105,10 +117,10 @@ The project has a built-in **Execution Security** system that supports exactly t
 ## What the Assistant Would Be Able To Do
 
 Once configured, the assistant will be able to:
-1.  **Conversational Interface**: Chat with you via the included Web UI.
+1.  **Conversational Interface**: Chat with you via the included Web UI (accessed via browser, no install).
 2.  **Execute Mortgage Tasks**:
-    *   "Check the status of the loan for John Doe" -> Agent logs into EMMA (via browser) or calls API -> Displays status.
-    *   "Lock the rate for Loan #12345 at 6.5%" -> Agent asks "Are you sure you want to lock Loan #12345 at 6.5%?" -> User approves -> Agent performs the click/API call.
+    *   "Check the status of the loan for John Doe" -> Agent logs into EMMA (via server-side browser) or calls API -> Displays status.
+    *   "Lock the rate for Loan #12345 at 6.5%" -> Agent asks "Are you sure you want to lock Loan #12345 at 6.5%?" -> User approves in chat -> Agent performs the action.
 3.  **Document Handling**:
     *   "Upload this PDF to the loan file" -> Agent takes the file and uploads it via the browser/API.
 4.  **Safety**:
@@ -117,4 +129,4 @@ Once configured, the assistant will be able to:
 
 ## Conclusion
 
-This project is an excellent foundation for a specialized Lending Assistant. It requires **no core code changes**—only configuration and the definition of your domain-specific "Skills" (API or Browser automation). The UI and security features are already built-in and well-suited for a loan officer's workflow.
+This project is an excellent foundation for a specialized Lending Assistant. It requires **no core code changes**—only configuration and the definition of your domain-specific "Skills" (API or Browser automation). It supports **zero-install web deployment** for your loan officers, running securely on a central server while automating the EMMA portal via headless Playwright.
