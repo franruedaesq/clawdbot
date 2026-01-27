@@ -34,7 +34,31 @@ The system loads "skills" (capabilities) from directories. You can restrict the 
   }
   ```
 
-### 2. Adding Mortgage Capabilities (EMMA Integration)
+### 2. User Interface (UI)
+**Requirement**: "Does it have a UI? ... A terminal seems a bit hard for a loan officer."
+
+**Solution**:
+**Yes, the project includes a web-based User Interface.**
+- **Existing Capabilities**: The project ships with a built-in "WebChat" and "Control UI" (found in `ui/`).
+- **Features**:
+  - **Conversational Stream**: It displays the conversation history, which is essential for a loan officer to see past actions ("Rate locked at 6.5%").
+  - **Process Visibility**: The UI supports displaying "tool calls" (actions being processed) in real-time. When the agent interacts with the EMMA portal, the UI shows which tool is running (e.g., `browser.click`, `emma.lock_rate`) and its result.
+  - **Confirmations**: The UI integrates with the messaging system. When the agent needs approval (configured via the "human-in-the-loop" settings), it sends a message asking for confirmation. The loan officer can simply type "yes" or "approve" in the chat interface.
+- **Integration**: No extra coding is required to get a UI; it is part of the standard deployment.
+
+### 3. Browser Automation (EMMA Portal)
+**Requirement**: "Can this project login in in EMMA portal and click around to do stuff?"
+
+**Solution**:
+**Yes, the project has robust, built-in browser automation.**
+- **Technology**: It uses Playwright (a powerful browser automation tool) under the hood (`src/browser/`).
+- **Capabilities**:
+  - **Login**: The agent can navigate to the EMMA portal login page, type credentials (securely injected via environment variables), and handle the login process.
+  - **Interaction**: It can click buttons, fill forms, select dropdowns, and upload files (`setInputFiles`).
+  - **Visuals**: It can take screenshots of the portal to confirm actions or show the status to the loan officer.
+- **Implementation**: You would define these interactions as a "Skill" (e.g., `skills/emma/SKILL.md`) telling the agent: "To lock a rate, go to url X, click button Y...".
+
+### 4. Mortgage Capabilities (API & Tools)
 **Requirement**: "Generate loans, rate lock loans, price etc, consult loans, upload documents."
 
 **Solution**:
@@ -57,7 +81,7 @@ You can add new capabilities by creating **Skills**. A Skill is simply a directo
     `curl -X POST "https://api.springeq.com/loans/{id}/lock" -d '{"rate": {rate}}'`
     ```
 
-### 3. Safety & Human-in-the-Loop
+### 5. Safety & Human-in-the-Loop
 **Requirement**: "Limiting its capacity like requiring human in the loop for contacting other people or deleting files."
 
 **Solution**:
@@ -81,16 +105,16 @@ The project has a built-in **Execution Security** system that supports exactly t
 ## What the Assistant Would Be Able To Do
 
 Once configured, the assistant will be able to:
-1.  **Conversational Interface**: Chat with you via WhatsApp, Slack, or a custom Web UI.
+1.  **Conversational Interface**: Chat with you via the included Web UI.
 2.  **Execute Mortgage Tasks**:
-    *   "Check the status of the loan for John Doe" -> Agent calls `GET /loans?q=John+Doe` -> Displays status.
-    *   "Lock the rate for Loan #12345 at 6.5%" -> Agent asks "Are you sure you want to lock Loan #12345 at 6.5%?" -> User approves -> Agent calls API.
+    *   "Check the status of the loan for John Doe" -> Agent logs into EMMA (via browser) or calls API -> Displays status.
+    *   "Lock the rate for Loan #12345 at 6.5%" -> Agent asks "Are you sure you want to lock Loan #12345 at 6.5%?" -> User approves -> Agent performs the click/API call.
 3.  **Document Handling**:
-    *   "Upload this PDF to the loan file" -> Agent takes the file and uploads it via the configured API.
+    *   "Upload this PDF to the loan file" -> Agent takes the file and uploads it via the browser/API.
 4.  **Safety**:
     *   It will **refuse** to run unrelated commands (like `rm -rf` or checking the weather) if they are not allowed.
     *   It will **pause** and request your approval for sensitive actions defined in your policy.
 
 ## Conclusion
 
-This project is an excellent foundation for a specialized Lending Assistant. It requires **no core code changes**—only configuration and the definition of your domain-specific "Skills" (API interactions). The security features for "human in the loop" are already built-in and robust.
+This project is an excellent foundation for a specialized Lending Assistant. It requires **no core code changes**—only configuration and the definition of your domain-specific "Skills" (API or Browser automation). The UI and security features are already built-in and well-suited for a loan officer's workflow.
