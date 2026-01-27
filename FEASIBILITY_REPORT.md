@@ -145,10 +145,67 @@ Ideal if you already have an AWS VPC or need specific networking.
 *   **Storage (EBS)**: 20 GB gp3 volume (~$2 / month).
 *   **Total Estimated**: **~$27 - $32 / month**.
 
-#### Additional Variable Costs (AI APIs)
-Note that the server cost covers *hosting* the assistant. The "intelligence" comes from the AI provider (Anthropic or OpenAI), which is billed separately based on usage.
-*   **Estimated usage**: For a typical loan officer workflow (API calls, reading documents), expect **$20 - $50 / user / month** depending on volume.
+### 9. Implementation Guide: From Local Docker to Production
+**Requirement**: "Steps to follow... starting with this project... testing it locally but inside a docker... keep it working with EMMA."
+
+#### Step 1: Local Docker Simulation
+Simulate the AWS environment on your laptop.
+1.  **Configure**: Create a `clawdbot.json` (or `.env` file) with your API keys (OpenAI/Anthropic).
+2.  **Build & Run**:
+    ```bash
+    docker compose up --build
+    ```
+    This builds the same container image that will run in production.
+3.  **Access**: Open your browser at `http://localhost:18789`. You are now interacting with the "Server" just like a loan officer would.
+
+#### Step 2: Integrating EMMA (The "Skill")
+1.  **Create Skill**: Add a file `skills/emma/SKILL.md` to your project.
+2.  **Define Actions**:
+    ```markdown
+    # EMMA Portal Tools
+    ## Login to EMMA
+    Logs into the portal.
+    `node scripts/emma-login.js` (or use browser tools directly)
+    ```
+3.  **Test**: In the Web UI (running in Docker), say "Login to EMMA". The container will launch a headless browser and attempt the action. You can view screenshots in the UI if you add a screenshot tool.
+
+#### Step 3: Deploy to AWS
+1.  **Launch Instance**: Start your Lightsail or EC2 instance.
+2.  **Copy Files**: Upload your project (with the new `skills/emma` folder) to the server.
+3.  **Run**: Execute `docker compose up -d` on the server.
+4.  **Secure Access**: Set up Tailscale or an SSH tunnel so only your team can access the Web UI.
+
+### 10. Cost & Usage Optimization Strategy
+**Requirement**: "Reduced the amount of taken usage... Disable some 'skill', use a cheaper model?"
+
+This is a critical concern. AI API costs are based on "tokens" (text sent/received).
+
+#### Strategy A: Reduce Context (Input Tokens)
+Every time you send a message, the AI reads its "instructions" (System Prompt).
+*   **Action**: **Disable unused skills.**
+    *   If you enable "Spotify", "Weather", "GitHub", etc., the AI reads instructions for all of them on *every* request.
+    *   **Fix**: Explicitly disable everything except `browser` and `emma` in `clawdbot.json`.
+    *   **Impact**: drastically reduces input token cost per message.
+
+#### Strategy B: Use Cheaper Models
+For routine tasks (looking up a loan status), you don't need the "smartest" (and most expensive) model.
+*   **Recommended Model**: **GPT-4o-mini** or **Claude 3 Haiku**.
+*   **Cost Difference**:
+    *   Claude 3.5 Opus: ~$15.00 / 1M input tokens.
+    *   **GPT-4o-mini**: ~$0.15 / 1M input tokens. (**100x cheaper**)
+*   **Configuration**:
+    Set the default model in `clawdbot.json`:
+    ```json
+    {
+      "agent": {
+        "model": "openai/gpt-4o-mini"
+      }
+    }
+    ```
+
+#### Strategy C: Limit "Thinking"
+*   **Action**: Ensure "Thinking" (Chain of Thought) is disabled or set to "low" for simple tasks. High thinking burns output tokens rapidly.
 
 ## Conclusion
 
-This project is an excellent foundation for a specialized Lending Assistant. It requires **no core code changes**—only configuration and the definition of your domain-specific "Skills" (API or Browser automation). It supports **zero-install web deployment** for your loan officers, running securely on a central server (e.g., AWS Lightsail for ~$20/mo) while automating the EMMA portal via headless Playwright.
+By running a **customized Docker container** on a **$20/mo AWS Lightsail instance**, using **GPT-4o-mini**, and **disabling unused skills**, you can build a secure, cost-effective, and highly capable Lending Assistant that integrates with EMMA via browser automation—all without modifying the core software platform.
