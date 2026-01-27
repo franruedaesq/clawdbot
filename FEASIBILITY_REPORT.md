@@ -114,19 +114,23 @@ The project has a built-in **Execution Security** system that supports exactly t
   ```
   For dangerous tasks (like "delete file" or "lock rate"), you can set `ask` to `"always"` for those specific patterns, or simply *not* include them in the allowlist so the system defaults to asking the user.
 
-## What the Assistant Would Be Able To Do
+### 7. Hardware & System Requirements
+**Requirement**: "Which hardware do we need to run it? Like ram processor OS memory?"
 
-Once configured, the assistant will be able to:
-1.  **Conversational Interface**: Chat with you via the included Web UI (accessed via browser, no install).
-2.  **Execute Mortgage Tasks**:
-    *   "Check the status of the loan for John Doe" -> Agent logs into EMMA (via server-side browser) or calls API -> Displays status.
-    *   "Lock the rate for Loan #12345 at 6.5%" -> Agent asks "Are you sure you want to lock Loan #12345 at 6.5%?" -> User approves in chat -> Agent performs the action.
-3.  **Document Handling**:
-    *   "Upload this PDF to the loan file" -> Agent takes the file and uploads it via the browser/API.
-4.  **Safety**:
-    *   It will **refuse** to run unrelated commands (like `rm -rf` or checking the weather) if they are not allowed.
-    *   It will **pause** and request your approval for sensitive actions defined in your policy.
+**Analysis**:
+The system is lightweight because the "Heavy Lifting" (AI Inference) is done by external APIs (Anthropic/OpenAI), not on your local hardware.
+
+**Recommended Server Specs (for running the Gateway + Headless Browser):**
+*   **Operating System**: Linux (Debian/Ubuntu recommended for Docker), macOS, or Windows (via WSL2).
+*   **Processor (CPU)**: 2+ vCPUs (x64 or ARM64). No GPU required.
+*   **Memory (RAM)**:
+    *   **Minimum**: 2 GB (if only using API tools).
+    *   **Recommended**: 4 GB+ (if using **Browser Automation** for EMMA). Headless Chrome/Playwright can consume significant memory depending on the complexity of the portal.
+*   **Disk Space**: ~10 GB free space (for Docker images, logs, and temporary browser files).
+*   **Network**: Stable internet connection to reach OpenAI/Anthropic APIs and the EMMA portal.
+
+**Note**: Since you are deploying this as a web-based assistant, these specs apply to the **Server** (Cloud/VPS). The Loan Officers can use any laptop (Windows/Mac) with a web browser to access it.
 
 ## Conclusion
 
-This project is an excellent foundation for a specialized Lending Assistant. It requires **no core code changes**—only configuration and the definition of your domain-specific "Skills" (API or Browser automation). It supports **zero-install web deployment** for your loan officers, running securely on a central server while automating the EMMA portal via headless Playwright.
+This project is an excellent foundation for a specialized Lending Assistant. It requires **no core code changes**—only configuration and the definition of your domain-specific "Skills" (API or Browser automation). It supports **zero-install web deployment** for your loan officers, running securely on a central server (Linux/Docker, ~4GB RAM) while automating the EMMA portal via headless Playwright.
