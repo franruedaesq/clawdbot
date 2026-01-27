@@ -117,9 +117,6 @@ The project has a built-in **Execution Security** system that supports exactly t
 ### 7. Hardware & System Requirements
 **Requirement**: "Which hardware do we need to run it? Like ram processor OS memory?"
 
-**Analysis**:
-The system is lightweight because the "Heavy Lifting" (AI Inference) is done by external APIs (Anthropic/OpenAI), not on your local hardware.
-
 **Recommended Server Specs (for running the Gateway + Headless Browser):**
 *   **Operating System**: Linux (Debian/Ubuntu recommended for Docker), macOS, or Windows (via WSL2).
 *   **Processor (CPU)**: 2+ vCPUs (x64 or ARM64). No GPU required.
@@ -127,10 +124,31 @@ The system is lightweight because the "Heavy Lifting" (AI Inference) is done by 
     *   **Minimum**: 2 GB (if only using API tools).
     *   **Recommended**: 4 GB+ (if using **Browser Automation** for EMMA). Headless Chrome/Playwright can consume significant memory depending on the complexity of the portal.
 *   **Disk Space**: ~10 GB free space (for Docker images, logs, and temporary browser files).
-*   **Network**: Stable internet connection to reach OpenAI/Anthropic APIs and the EMMA portal.
 
-**Note**: Since you are deploying this as a web-based assistant, these specs apply to the **Server** (Cloud/VPS). The Loan Officers can use any laptop (Windows/Mac) with a web browser to access it.
+### 8. Cloud Hosting & Cost Estimation (AWS)
+**Requirement**: "Which kind of setup do we need and can you estimate costs like in AWS?"
+
+For a production-grade deployment for your loan officers, we recommend a setup that balances performance with cost. Since the heavy AI processing happens via external APIs (Anthropic/OpenAI), the server costs are quite low.
+
+#### Option A: Simple & Predictable (Amazon Lightsail) **[Recommended]**
+Ideal for a single instance or small team.
+*   **Setup**: Docker container on a Lightsail instance.
+*   **Specs**: 4 GB RAM, 2 vCPUs, 80 GB SSD.
+*   **Cost**: **~$20 / month** (Fixed).
+*   **Pros**: Includes data transfer and storage; very easy to set up.
+
+#### Option B: Flexible & Scalable (Amazon EC2)
+Ideal if you already have an AWS VPC or need specific networking.
+*   **Instance Type**: `t3.medium` (x86) or `t4g.medium` (ARM - better price/performance).
+    *   2 vCPUs, 4 GB RAM.
+*   **Compute Cost**: ~$25 - $30 / month (On-Demand).
+*   **Storage (EBS)**: 20 GB gp3 volume (~$2 / month).
+*   **Total Estimated**: **~$27 - $32 / month**.
+
+#### Additional Variable Costs (AI APIs)
+Note that the server cost covers *hosting* the assistant. The "intelligence" comes from the AI provider (Anthropic or OpenAI), which is billed separately based on usage.
+*   **Estimated usage**: For a typical loan officer workflow (API calls, reading documents), expect **$20 - $50 / user / month** depending on volume.
 
 ## Conclusion
 
-This project is an excellent foundation for a specialized Lending Assistant. It requires **no core code changes**—only configuration and the definition of your domain-specific "Skills" (API or Browser automation). It supports **zero-install web deployment** for your loan officers, running securely on a central server (Linux/Docker, ~4GB RAM) while automating the EMMA portal via headless Playwright.
+This project is an excellent foundation for a specialized Lending Assistant. It requires **no core code changes**—only configuration and the definition of your domain-specific "Skills" (API or Browser automation). It supports **zero-install web deployment** for your loan officers, running securely on a central server (e.g., AWS Lightsail for ~$20/mo) while automating the EMMA portal via headless Playwright.
